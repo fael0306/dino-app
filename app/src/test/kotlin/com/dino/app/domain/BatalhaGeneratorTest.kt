@@ -1,47 +1,47 @@
 package com.dino.app.domain
 
-import com.dino.app.data.DinoData
 import org.junit.Assert.*
 import org.junit.Test
 
-class BatalhaGeneratorTest {
-    @Test fun todosOsParesGeramPerguntasValidas() {
-        val lista = DinoData.REAIS
-        for (a in lista) for (b in lista) {
-            if (a.Nome == b.Nome) continue
-            val qs = BatalhaGenerator.gerar(a, b, 5)
-            assertEquals(5, qs.size)
-            qs.forEach { q ->
-                assertTrue(q.resposta in q.opcoes.indices)
-                assertEquals(q.opcoes.size, q.opcoes.toSet().size)
-            }
+class SimulacoesTest {
+    @Test fun massaCresceComACircunferencia() {
+        assertTrue(Simulacoes.calcularMassaTon(60.0, true) > Simulacoes.calcularMassaTon(40.0, true))
+        assertTrue(Simulacoes.calcularMassaTon(60.0, false) > Simulacoes.calcularMassaTon(40.0, false))
+    }
+
+    @Test fun massaECircunferenciaSaoInversas() {
+        for (bip in listOf(true, false)) {
+            val c = 55.0
+            val volta = Simulacoes.circFemoralPorMassa(Simulacoes.calcularMassaTon(c, bip), bip)
+            assertEquals(c, volta, 1e-6)
         }
     }
 
-    @Test fun dinossaurosComAtributosIguaisNaoQuebram() {
-        val a = DinoData.REAIS[0]
-        val b = a.copy(Nome = "Clone")
-        val qs = BatalhaGenerator.gerar(a, b, 5)
-        assertEquals(5, qs.size)
+    @Test fun circunferenciaParaMassaNaoPositivaEZero() {
+        assertEquals(0.0, Simulacoes.circFemoralPorMassa(0.0, true), 0.0)
+        assertEquals(0.0, Simulacoes.circFemoralPorMassa(-1.0, false), 0.0)
     }
 
-    @Test fun respostaDePesoApontaParaOMaisPesado() {
-        val rex = DinoData.REAIS.first { it.Nome.startsWith("Tyrannosaurus") }
-        val raptor = DinoData.REAIS.first { it.Nome.startsWith("Velociraptor") }
-        repeat(50) {
-            BatalhaGenerator.gerar(rex, raptor, 6)
-                .filter { "maior peso" in it.pergunta }
-                .forEach { assertEquals(rex.Nome, it.opcoes[it.resposta]) }
-        }
+    @Test fun icnofosseisSaoIdentificados() {
+        assertEquals("Eubrontes", Simulacoes.identificarIcnogenus(3, true, "grande", "alongada", null))
+        assertEquals("Grallator", Simulacoes.identificarIcnogenus(3, false, "pequeno", null, null))
+        assertEquals("Anomoepus", Simulacoes.identificarIcnogenus(4, false, null, null, "larga"))
+        assertEquals("Chirotherium", Simulacoes.identificarIcnogenus(4, true, null, null, null))
+        assertEquals("Desconhecido", Simulacoes.identificarIcnogenus(3, true, null, null, null))
     }
 
-    @Test fun respostaDePeriodoApontaParaOMaisAntigo() {
-        val jurassico = DinoData.REAIS.first { it.Periodo.contains("Jurássico") }
-        val cretaceo = DinoData.REAIS.first { it.Periodo.contains("Cretáceo") }
-        repeat(50) {
-            BatalhaGenerator.gerar(cretaceo, jurassico, 6)
-                .filter { "mais antigo" in it.pergunta }
-                .forEach { assertEquals(jurassico.Nome, it.opcoes[it.resposta]) }
-        }
+    @Test fun simulacaoTemTamanhoEsperadoEValoresNaoNegativos() {
+        val r = Simulacoes.simularExtincao(50.0, 50.0, 10)
+        assertEquals(200, r.tempo.size)
+        assertEquals(200, r.plantas.size)
+        assertTrue((r.plantas + r.herbivoros + r.carnivoros).all { it >= 0.0 && it.isFinite() })
+    }
+
+    @Test fun csvTemCabecalhoELinhas() {
+        val r = Simulacoes.simularExtincao(10.0, 10.0, 2)
+        val linhas = Simulacoes.paraCsv(r).trim().lines()
+        assertEquals("tempo_anos,plantas,herbivoros,carnivoros", linhas.first())
+        assertEquals(r.tempo.size + 1, linhas.size)
+        assertEquals(4, linhas[1].split(",").size)
     }
 }

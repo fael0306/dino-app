@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -35,68 +34,4 @@ private fun calcularLayout(arestas: List<Pair<String, String>>): LayoutArvore {
     val porNivel = niveis.entries.groupBy({ it.value }, { it.key })
     val pos = mutableMapOf<String, Offset>()
     porNivel.forEach { (niv, nos) -> nos.forEachIndexed { idx, nome -> pos[nome] = Offset(idx * 260f + 40f, niv * 110f + 60f) } }
-    return LayoutArvore(pos, arestas)
-}
-
-@Composable
-fun ArvoreScreen() {
-    val layout = remember { calcularLayout(DinoData.ARVORE_ARESTAS) }
-    var escala by remember { mutableFloatStateOf(1f) }
-    var deslocamento by remember { mutableStateOf(Offset(20f, 20f)) }
-    var selecionado by remember { mutableStateOf<String?>(null) }
-    val pincel = remember { Paint().apply { color = android.graphics.Color.GRAY; textSize = 30f; isAntiAlias = true } }
-    val corLinha = MaterialTheme.colorScheme.onSurfaceVariant
-    val corNo = MaterialTheme.colorScheme.primary
-    val corSel = MaterialTheme.colorScheme.tertiary
-    val corTexto = MaterialTheme.colorScheme.onBackground
-
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("🌳 Árvore Evolutiva", style = MaterialTheme.typography.headlineSmall)
-        Text("Arraste, use pinça para ampliar e toque em um grupo.", style = MaterialTheme.typography.labelSmall)
-        Spacer(Modifier.height(8.dp))
-        Canvas(
-            Modifier.fillMaxSize().clipToBounds()
-                .pointerInput(Unit) {
-                    detectTransformGestures { centroide, pan, zoom, _ ->
-                        val nova = (escala * zoom).coerceIn(0.4f, 3f)
-                        val f = nova / escala
-                        deslocamento = (deslocamento - centroide) * f + centroide + pan
-                        escala = nova
-                    }
-                }
-                .pointerInput(layout) {
-                    detectTapGestures { toque ->
-                        val mundo = (toque - deslocamento) / escala
-                        val mais = layout.posicoes.minByOrNull { (it.value - mundo).getDistance() }
-                        selecionado = mais?.takeIf { (it.value - mundo).getDistance() < 60f }?.key
-                    }
-                }
-        ) {
-            withTransform({
-                translate(deslocamento.x, deslocamento.y)
-                scale(escala, escala, pivot = Offset.Zero)
-            }) {
-                layout.arestas.forEach { (a, b) ->
-                    val pa = layout.posicoes[a]; val pb = layout.posicoes[b]
-                    if (pa != null && pb != null) drawLine(corLinha, pa, pb, strokeWidth = 2f)
-                }
-                pincel.color = corTexto.toArgbCompat()
-                layout.posicoes.forEach { (nome, p) ->
-                    drawCircle(if (nome == selecionado) corSel else corNo, radius = if (nome == selecionado) 14f else 8f, center = p)
-                    drawContext.canvas.nativeCanvas.drawText(nome, p.x + 16f, p.y + 10f, pincel)
-                }
-            }
-        }
-    }
-
-    selecionado?.let { nome ->
-        AlertDialog(
-            onDismissRequest = { selecionado = null },
-            confirmButton = { TextButton(onClick = { selecionado = null }) { Text("Fechar") } },
-            title = { Text(nome) },
-            text = { Text(ArvoreInfo.DESCRICOES[nome] ?: "Sem descrição disponível.") }
-        )
-    }
-}
-
-private fun Color.toArgbCompat(): Int = this.toArgb()
+    return Layout
