@@ -1,58 +1,63 @@
 package com.dino.app.domain
 
-import com.dino.app.data.model.BatalhaPergunta
-import com.dino.app.data.model.Dinosaur
+import java.util.Locale
 
-object BatalhaGenerator {
-    private val ordem = mapOf("Triássico" to 1, "Jurássico" to 2, "Cretáceo" to 3)
-    private val dietas = listOf("Carnívoro", "Herbívoro", "Piscívoro")
+object Simulacoes {
+    data class ExtincaoResult(val tempo: List<Double>, val plantas: List<Double>, val herbivoros: List<Double>, val carnivoros: List<Double>)
 
-    /** Gera [qtd] perguntas sobre o duelo. Nunca lança exceção; devolve lista vazia só se nada for possível. */
-    fun gerar(d1: Dinosaur, d2: Dinosaur, qtd: Int = 5): List<BatalhaPergunta> {
-        val pool = listOfNotNull(
-            atributo(d1, d2, "Peso"), atributo(d1, d2, "Comprimento"), atributo(d1, d2, "Altura"),
-            periodo(d1, d2), dieta(d1), dieta(d2)
-        ).shuffled()
-        if (pool.isEmpty()) return emptyList()
-        return List(qtd) { pool[it % pool.size] }
-    }
-
-    private fun atributo(d1: Dinosaur, d2: Dinosaur, chave: String): BatalhaPergunta? {
-        val (v1, v2) = when (chave) {
-            "Peso" -> d1.Peso to d2.Peso
-            "Comprimento" -> d1.Comprimento to d2.Comprimento
-            else -> d1.Altura to d2.Altura
+    fun simularExtincao(bloqueio: Double, chuva: Double, anos: Int): ExtincaoResult {
+        val dt = 0.05
+        val passos = (anos / dt).toInt()
+        var P = 100.0; var H = 40.0; var C = 15.0
+        val t = ArrayList<Double>(); val ps = ArrayList<Double>()
+        val hs = ArrayList<Double>(); val cs = ArrayList<Double>()
+        val fb = 1.0 - bloqueio / 200.0; val fc = 1.0 - chuva / 300.0
+        for (i in 0 until passos) {
+            val k1 = deriva(P, H, C, fb, fc)
+            val k2 = deriva(P + dt/2*k1[0], H + dt/2*k1[1], C + dt/2*k1[2], fb, fc)
+            val k3 = deriva(P + dt/2*k2[0], H + dt/2*k2[1], C + dt/2*k2[2], fb, fc)
+            val k4 = deriva(P + dt*k3[0], H + dt*k3[1], C + dt*k3[2], fb, fc)
+            P = (P + dt/6 * (k1[0] + 2*k2[0] + 2*k3[0] + k4[0])).coerceAtLeast(0.0)
+            H = (H + dt/6 * (k1[1] + 2*k2[1] + 2*k3[1] + k4[1])).coerceAtLeast(0.0)
+            C = (C + dt/6 * (k1[2] + 2*k2[2] + 2*k3[2] + k4[2])).coerceAtLeast(0.0)
+            t.add(i * dt); ps.add(P); hs.add(H); cs.add(C)
         }
-        if (v1 == v2) return null
-        val unidade = if (chave == "Peso") "ton" else "m"
-        val rotulo = chave.lowercase()
-        val vencedor = if (v1 > v2) d1 else d2
-        val perdedor = if (v1 > v2) d2 else d1
-        val opcoes = listOf(d1.Nome, d2.Nome).shuffled()
-        return BatalhaPergunta(
-            "Entre ${d1.Nome} e ${d2.Nome}, quem tem maior $rotulo?",
-            opcoes, opcoes.indexOf(vencedor.Nome),
-            "${vencedor.Nome}: ${maxOf(v1, v2)} $unidade; ${perdedor.Nome}: ${minOf(v1, v2)} $unidade."
-        )
+        return ExtincaoResult(t, ps, hs, cs)
     }
 
-    private fun periodo(d1: Dinosaur, d2: Dinosaur): BatalhaPergunta? {
-        val p1 = ordem.entries.firstOrNull { d1.Periodo.contains(it.key) }?.value ?: return null
-        val p2 = ordem.entries.firstOrNull { d2.Periodo.contains(it.key) }?.value ?: return null
-        if (p1 == p2) return null
-        val antigo = if (p1 < p2) d1 else d2
-        val novo = if (p1 < p2) d2 else d1
-        val opcoes = listOf(d1.Nome, d2.Nome).shuffled()
-        return BatalhaPergunta(
-            "Entre ${d1.Nome} e ${d2.Nome}, quem viveu no período mais antigo?",
-            opcoes, opcoes.indexOf(antigo.Nome),
-            "${antigo.Nome}: ${antigo.Periodo}; ${novo.Nome}: ${novo.Periodo}."
-        )
+    private fun deriva(P: Double, H: Double, C: Double, fb: Double, fc: Double): DoubleArray {
+        val dP = (0.8 * fb * fc) * P * (1 - P / 100.0) - 0.01 * P * H
+        val dH = (0.001 * 0.01 * 0.1) * P * H - 0.05 * H * C - 0.05 * H
+        val dC = (0.001 * 0.05 * 0.1) * H * C - 0.05 * C
+        return doubleArrayOf(dP, dH, dC)
     }
 
-    private fun dieta(d: Dinosaur): BatalhaPergunta? {
-        val idx = dietas.indexOf(d.Dieta)
-        if (idx < 0) return null
-        return BatalhaPergunta("Qual é a dieta de ${d.Nome}?", dietas, idx, "${d.Nome}: ${d.Dieta}.")
+    fun paraCsv(r: ExtincaoResult): String = buildString {
+        append("tempo_anos,plantas,herbivoros,carnivoros\n")
+        for (i in r.tempo.indices) {
+            append(String.format(Locale.US, "%.2f,%.4f,%.4f,%.4f\n", r.tempo[i], r.plantas[i], r.herbivoros[i], r.carnivoros[i]))
+        }
+    }
+
+    fun calcularMassaTon(circCm: Double, bipede: Boolean): Double {
+        val a = if (bipede) 0.00016 else 0.00049
+        val b = if (bipede) 2.73 else 2.75
+        return (a * Math.pow(circCm * 10, b)) / 1000.0
+    }
+
+    fun circFemoralPorMassa(massTon: Double, bipede: Boolean): Double {
+        val a = if (bipede) 0.00016 else 0.00049
+        val b = if (bipede) 2.73 else 2.75
+        return if (massTon <= 0) 0.0 else Math.pow(massTon * 1000 / a, 1.0 / b) / 10.0
+    }
+
+    fun identificarIcnogenus(dedos: Int, garras: Boolean, tamanho: String?, forma: String?, proporcao: String?): String {
+        return when {
+            dedos == 3 && garras && tamanho == "grande" && forma == "alongada" -> "Eubrontes"
+            dedos == 3 && !garras && tamanho == "pequeno" -> "Grallator"
+            dedos == 4 && !garras && proporcao == "larga" -> "Anomoepus"
+            dedos == 4 && garras -> "Chirotherium"
+            else -> "Desconhecido"
+        }
     }
 }
