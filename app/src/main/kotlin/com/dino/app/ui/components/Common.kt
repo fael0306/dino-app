@@ -16,7 +16,7 @@ fun PaleoCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
     Card(
         modifier = modifier.fillMaxWidth().padding(12.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(Modifier.padding(16.dp), content = content)

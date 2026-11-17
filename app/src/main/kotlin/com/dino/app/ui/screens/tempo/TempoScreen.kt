@@ -16,7 +16,8 @@ import com.dino.app.ui.components.SectionTitle
 @Composable
 fun TempoScreen() {
     var idade by remember { mutableFloatStateOf(150f) }
-    val periodo = DinoData.PERIODOS.firstOrNull { idade <= it.inicio && idade >= it.fim } ?: DinoData.PERIODOS[0]
+    // Intervalos semiabertos (fim, início]; 66 Ma cai no último período (Cretáceo).
+    val periodo = DinoData.PERIODOS.firstOrNull { idade > it.fim && idade <= it.inicio } ?: DinoData.PERIODOS.last()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         PaleoCard {
             SectionTitle("Linha do Tempo", "⏳")

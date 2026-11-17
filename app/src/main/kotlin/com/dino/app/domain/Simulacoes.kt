@@ -1,5 +1,7 @@
 package com.dino.app.domain
 
+import java.util.Locale
+
 object Simulacoes {
     data class ExtincaoResult(val tempo: List<Double>, val plantas: List<Double>, val herbivoros: List<Double>, val carnivoros: List<Double>)
 
@@ -28,6 +30,14 @@ object Simulacoes {
         val dH = (0.001 * 0.01 * 0.1) * P * H - 0.05 * H * C - 0.05 * H
         val dC = (0.001 * 0.05 * 0.1) * H * C - 0.05 * C
         return doubleArrayOf(dP, dH, dC)
+    }
+
+    /** Série temporal em CSV (separador vírgula, ponto decimal). */
+    fun paraCsv(r: ExtincaoResult): String = buildString {
+        append("tempo_anos,plantas,herbivoros,carnivoros\n")
+        for (i in r.tempo.indices) {
+            append(String.format(Locale.US, "%.2f,%.4f,%.4f,%.4f\n", r.tempo[i], r.plantas[i], r.herbivoros[i], r.carnivoros[i]))
+        }
     }
 
     fun calcularMassaTon(circCm: Double, bipede: Boolean): Double {

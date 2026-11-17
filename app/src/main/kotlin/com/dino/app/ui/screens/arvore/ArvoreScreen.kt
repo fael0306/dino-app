@@ -2,49 +2,101 @@ package com.dino.app.ui.screens.arvore
 
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.dino.app.data.ArvoreInfo
 import com.dino.app.data.DinoData
 
-@Composable
-fun ArvoreScreen() {
-    val arestas = DinoData.ARVORE_ARESTAS
+private class LayoutArvore(val posicoes: Map<String, Offset>, val arestas: List<Pair<String, String>>)
+
+private fun calcularLayout(arestas: List<Pair<String, String>>): LayoutArvore {
     val niveis = mutableMapOf<String, Int>()
-    val roots = arestas.map { it.first }.toSet() - arestas.map { it.second }.toSet()
-    val fila = ArrayDeque(roots.map { it to 0 })
+    val raizes = arestas.map { it.first }.toSet() - arestas.map { it.second }.toSet()
+    val fila = ArrayDeque(raizes.map { it to 0 })
     while (fila.isNotEmpty()) {
         val (n, niv) = fila.removeFirst(); niveis[n] = niv
         arestas.filter { it.first == n }.forEach { fila.addLast(it.second to niv + 1) }
     }
-    val nosPorNivel = niveis.entries.groupBy { it.value }.mapValues { it.value.map { e -> e.key } }
-    val largura = (nosPorNivel.values.maxOfOrNull { it.size } ?: 1) * 140 + 40
-    val altura = (nosPorNivel.size) * 100 + 40
+    val porNivel = niveis.entries.groupBy({ it.value }, { it.key })
+    val pos = mutableMapOf<String, Offset>()
+    porNivel.forEach { (niv, nos) -> nos.forEachIndexed { idx, nome -> pos[nome] = Offset(idx * 260f + 40f, niv * 110f + 60f) } }
+    return LayoutArvore(pos, arestas)
+}
+
+@Composable
+fun ArvoreScreen() {
+    val layout = remember { calcularLayout(DinoData.ARVORE_ARESTAS) }
+    var escala by remember { mutableFloatStateOf(1f) }
+    var deslocamento by remember { mutableStateOf(Offset(20f, 20f)) }
+    var selecionado by remember { mutableStateOf<String?>(null) }
+    val pincel = remember { Paint().apply { color = android.graphics.Color.GRAY; textSize = 30f; isAntiAlias = true } }
+    val corLinha = MaterialTheme.colorScheme.onSurfaceVariant
+    val corNo = MaterialTheme.colorScheme.primary
+    val corSel = MaterialTheme.colorScheme.tertiary
+    val corTexto = MaterialTheme.colorScheme.onBackground
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text("🌳 Árvore Evolutiva", style = MaterialTheme.typography.headlineSmall)
+        Text("Arraste, use pinça para ampliar e toque em um grupo.", style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(8.dp))
-        Box(Modifier.fillMaxSize().horizontalScroll(rememberScrollState()).verticalScroll(rememberScrollState())) {
-            Canvas(Modifier.width(largura.dp).height(altura.dp)) {
-                val pos = mutableMapOf<String, Offset>()
-                nosPorNivel.forEach { (niv, nos) ->
-                    nos.forEachIndexed { idx, nome -> pos[nome] = Offset((idx + 1f) * 140f, (niv + 1f) * 100f) }
+        Canvas(
+            Modifier.fillMaxSize().clipToBounds()
+                .pointerInput(Unit) {
+                    detectTransformGestures { centroide, pan, zoom, _ ->
+                        val nova = (escala * zoom).coerceIn(0.4f, 3f)
+                        val f = nova / escala
+                        deslocamento = (deslocamento - centroide) * f + centroide + pan
+                        escala = nova
+                    }
                 }
-                arestas.forEach { (a, b) -> pos[a]?.let { pa -> pos[b]?.let { pb -> drawLine(Color.Gray, pa, pb, strokeWidth = 2f) } } }
-                pos.forEach { (nome, p) ->
-                    drawCircle(Color(0xFF2C3E50), radius = 8f, center = p)
-                    drawContext.canvas.nativeCanvas.drawText(nome, p.x + 12f, p.y + 4f, Paint().apply { color = android.graphics.Color.DKGRAY; textSize = 30f })
+                .pointerInput(layout) {
+                    detectTapGestures { toque ->
+                        val mundo = (toque - deslocamento) / escala
+                        val mais = layout.posicoes.minByOrNull { (it.value - mundo).getDistance() }
+                        selecionado = mais?.takeIf { (it.value - mundo).getDistance() < 60f }?.key
+                    }
+                }
+        ) {
+            withTransform({
+                translate(deslocamento.x, deslocamento.y)
+                scale(escala, escala, pivot = Offset.Zero)
+            }) {
+                layout.arestas.forEach { (a, b) ->
+                    val pa = layout.posicoes[a]; val pb = layout.posicoes[b]
+                    if (pa != null && pb != null) drawLine(corLinha, pa, pb, strokeWidth = 2f)
+                }
+                pincel.color = corTexto.toArgbCompat()
+                layout.posicoes.forEach { (nome, p) ->
+                    drawCircle(if (nome == selecionado) corSel else corNo, radius = if (nome == selecionado) 14f else 8f, center = p)
+                    drawContext.canvas.nativeCanvas.drawText(nome, p.x + 16f, p.y + 10f, pincel)
                 }
             }
         }
     }
+
+    selecionado?.let { nome ->
+        AlertDialog(
+            onDismissRequest = { selecionado = null },
+            confirmButton = { TextButton(onClick = { selecionado = null }) { Text("Fechar") } },
+            title = { Text(nome) },
+            text = { Text(ArvoreInfo.DESCRICOES[nome] ?: "Sem descrição disponível.") }
+        )
+    }
 }
+
+private fun Color.toArgbCompat(): Int = this.toArgb()

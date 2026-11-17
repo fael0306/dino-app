@@ -7,16 +7,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.dino.app.data.DinoData
+import com.dino.app.paleoApp
 import com.dino.app.ui.components.DinoSilhueta
 import com.dino.app.ui.components.PaleoCard
 import com.dino.app.ui.components.SectionTitle
 
 @Composable
 fun EscalaScreen() {
+    val app = LocalContext.current.paleoApp
     val classicos = DinoData.CLASSICOS
     var dino by remember { mutableStateOf(classicos[0]) }
+    var vistos by remember { mutableStateOf(setOf(classicos[0].Nome)) }
     var ref1 by remember { mutableStateOf("Humano") }
     var ref2 by remember { mutableStateOf("Nenhum") }
 
@@ -24,7 +28,13 @@ fun EscalaScreen() {
         PaleoCard {
             SectionTitle("Compare a Escala", "📏")
             Text("Dinossauro", style = MaterialTheme.typography.labelLarge)
-            DropdownGenerico(classicos.map { it.Nome }, dino.Nome) { nome -> classicos.firstOrNull { it.Nome == nome }?.let { dino = it } }
+            DropdownGenerico(classicos.map { it.Nome }, dino.Nome) { nome ->
+                classicos.firstOrNull { it.Nome == nome }?.let {
+                    dino = it
+                    vistos = vistos + it.Nome
+                    if (vistos.size >= 3) app.achievements.desbloquear("explorador_escala")
+                }
+            }
             Spacer(Modifier.height(8.dp))
             Text("Comparar com", style = MaterialTheme.typography.labelLarge)
             DropdownGenerico(listOf("Humano", "Elefante", "Outro"), ref1) { ref1 = it }

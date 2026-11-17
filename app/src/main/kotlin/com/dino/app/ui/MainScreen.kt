@@ -1,15 +1,21 @@
 package com.dino.app.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import com.dino.app.paleoApp
+import com.dino.app.ui.components.AchievementHost
 import com.dino.app.ui.screens.arvore.ArvoreScreen
 import com.dino.app.ui.screens.clima.ClimaScreen
 import com.dino.app.ui.screens.conquistas.ConquistasScreen
@@ -40,14 +46,15 @@ fun MainScreen() {
     val nav = rememberNavController()
     val backStack by nav.currentBackStackEntryAsState()
     val currentDest = backStack?.destination
+    val app = LocalContext.current.paleoApp
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("PaleoLab 🦴") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
         },
@@ -64,30 +71,31 @@ fun MainScreen() {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(tab.icon, tab.label) }, 
+                        icon = { Icon(tab.icon, tab.label) },
                         label = { Text(tab.label) }
                     )
                 }
             }
         }
     ) { padding ->
-        // Aqui ele liga cada rota à sua respectiva tela
-        NavHost(navController = nav, startDestination = "escala", modifier = Modifier.padding(padding)) {
-            composable("escala") { EscalaScreen() }
-            composable("fosseis") { FosseisScreen() }
-            composable("quiz") { QuizScreen() }
-            composable("clima") { ClimaScreen() }
-            composable("mais") { MaisScreen(nav) }
-            
-            // Telas acessadas através do botão "Mais"
-            composable("deriva") { DerivaScreen() }
-            composable("extincao") { ExtincaoScreen() }
-            composable("icnofosseis") { IcnofosseisScreen() }
-            composable("massa") { MassaScreen() }
-            composable("tempo") { TempoScreen() }
-            composable("conquistas") { ConquistasScreen() }
-            composable("pdf") { PdfScreen() }
-            composable("arvore") { ArvoreScreen() }
+        Box(Modifier.padding(padding).fillMaxSize()) {
+            NavHost(navController = nav, startDestination = "escala", modifier = Modifier.fillMaxSize()) {
+                composable("escala") { EscalaScreen() }
+                composable("fosseis") { FosseisScreen() }
+                composable("quiz") { QuizScreen() }
+                composable("clima") { ClimaScreen() }
+                composable("mais") { MaisScreen(nav) }
+
+                composable("deriva") { DerivaScreen() }
+                composable("extincao") { ExtincaoScreen() }
+                composable("icnofosseis") { IcnofosseisScreen() }
+                composable("massa") { MassaScreen() }
+                composable("tempo") { TempoScreen() }
+                composable("conquistas") { ConquistasScreen() }
+                composable("pdf") { PdfScreen() }
+                composable("arvore") { ArvoreScreen() }
+            }
+            AchievementHost(app.achievements, Modifier.align(Alignment.TopCenter))
         }
     }
 }
