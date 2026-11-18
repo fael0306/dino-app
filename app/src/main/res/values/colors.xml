@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#F4F1EA</color>
-    <color name="primary">#1A2A3A</color>
+    <!-- Mesmas cores do tema claro do site (css/style.css) -->
+    <color name="fundo">#F4EFE4</color>
+    <color name="superficie">#FFFFFF</color>
+    <color name="icone_fundo">#C0622D</color>
+    <color name="icone_osso">#FFF4E8</color>
 </resources>

@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">dino</string>
+    <string name="app_name">PaleoLab</string>
+    <string name="arquivo_salvo_downloads">%1$s salvo em Downloads/PaleoLab</string>
+    <string name="arquivo_pronto">%1$s pronto</string>
+    <string name="erro_salvar">Não foi possível salvar o arquivo.</string>
+    <string name="abrir_relatorio">Abrir relatório</string>
+    <string name="compartilhar_arquivo">Compartilhar arquivo</string>
+    <string name="sem_app_para_abrir">Nenhum app instalado consegue abrir este arquivo.</string>
 </resources>

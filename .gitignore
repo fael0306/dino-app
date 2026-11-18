@@ -5,3 +5,11 @@
 .DS_Store
 /build
 /app/build
+
+# Cópias das bibliotecas geradas por scripts/baixar-bibliotecas.sh
+# (o GitHub Actions baixa na hora de gerar o APK)
+/app/src/main/assets/www/vendor/chart.umd.min.js
+/app/src/main/assets/www/vendor/vis-network.min.js
+/app/src/main/assets/www/vendor/jspdf.umd.min.js
+/app/src/main/assets/www/vendor/leaflet/
+/app/src/main/assets/www/VERSAO_SITE.txt
