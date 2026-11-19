@@ -1,6 +1,6 @@
-# 🦴 PaleoLab Científico – Android v2.0.1
+# 🦴 PaleoLab Científico – Android v2.1.0
 
-Aplicativo Android do **PaleoLab Científico**, o laboratório virtual de paleontologia ([site](https://github.com/fael0306/dino)). O app traz as 12 seções do site v2.0.1 (Escala Real, Fósseis Reais, Deriva Continental, Linha do Tempo, Clima, Árvore Evolutiva, Extinção K‑Pg, Massa Corporal, Icnofósseis, Quiz & Batalha, Conquistas e Relatório PDF) com cara de aplicativo:
+Aplicativo Android do **PaleoLab Científico**, o laboratório virtual de paleontologia ([site](https://github.com/fael0306/dino)). O app traz as 11 seções do site v2.1.0 (Escala Real, Fósseis Reais, Viagem no Tempo, Clima, Árvore Evolutiva, Extinção K‑Pg, Massa Corporal, Icnofósseis, Quiz & Batalha, Conquistas e Relatório PDF) com cara de aplicativo:
 
 - barra superior com botão voltar e barra de navegação inferior (Início, Explorar, Laboratório, Desafios);
 - fichas em *bottom sheet*, avisos em *snackbar*, botões grandes para toque e transições entre telas;
@@ -56,7 +56,7 @@ Também dá para rodar manualmente em **Actions → Gerar APK → Run workflow**
 **Pré‑requisitos:** Android Studio (Ladybug ou mais novo), JDK 17, Android SDK 35.
 
 1. Clone o repositório e abra a pasta no Android Studio (**Open**).
-2. (Opcional) Rode `./scripts/baixar-bibliotecas.sh` para incluir as bibliotecas de gráficos, mapa, árvore e PDF no app. Sem isso elas são baixadas da internet na primeira vez que forem usadas.
+2. (Opcional) Rode `./scripts/baixar-bibliotecas.sh` para incluir as bibliotecas de gráficos, mapa e PDF no app. Sem isso elas são baixadas da internet na primeira vez que forem usadas.
 3. Clique em **Run ▶**.
 
 Para depurar a página, abra `chrome://inspect` no Chrome do computador com o celular conectado (o WebView é inspecionável nas versões de depuração).
@@ -76,7 +76,7 @@ app/src/main/
 └── AndroidManifest.xml
 scripts/
 ├── atualizar-site.sh        # Copia o site para assets/www
-└── baixar-bibliotecas.sh    # Baixa Chart.js, Leaflet, vis-network e jsPDF para uso offline
+└── baixar-bibliotecas.sh    # Baixa Chart.js, Leaflet e jsPDF para uso offline
 .github/workflows/android.yml  # Testes + APK a cada push
 ```
 
@@ -92,4 +92,4 @@ scripts/
 
 ## 📄 Licença
 
-Distribuído sob a licença MIT. As bibliotecas incluídas (Bootstrap Icons, Chart.js, Leaflet, vis-network, jsPDF) têm suas próprias licenças MIT/Apache.
+Distribuído sob a licença MIT. As bibliotecas incluídas (Bootstrap Icons, Chart.js, Leaflet, jsPDF) têm suas próprias licenças MIT/Apache.
