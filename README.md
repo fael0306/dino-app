@@ -1,6 +1,6 @@
-# 🦴 PaleoLab Científico – Android v2.1.0
+# 🦴 PaleoLab Científico – Android v2.1.1
 
-Aplicativo Android do **PaleoLab Científico**, o laboratório virtual de paleontologia ([site](https://github.com/fael0306/dino)). O app traz as 11 seções do site v2.1.0 (Escala Real, Fósseis Reais, Viagem no Tempo, Clima, Árvore Evolutiva, Extinção K‑Pg, Massa Corporal, Icnofósseis, Quiz & Batalha, Conquistas e Relatório PDF) com cara de aplicativo:
+Aplicativo Android do **PaleoLab Científico**, o laboratório virtual de paleontologia ([site](https://github.com/fael0306/dino)). O app traz as 11 seções do site v2.1.1 (Escala Real, Fósseis Reais, Viagem no Tempo, Clima, Árvore Evolutiva, Extinção K‑Pg, Massa Corporal, Icnofósseis, Quiz & Batalha, Conquistas e Relatório PDF) com cara de aplicativo:
 
 - barra superior com botão voltar e barra de navegação inferior (Início, Explorar, Laboratório, Desafios);
 - fichas em *bottom sheet*, avisos em *snackbar*, botões grandes para toque e transições entre telas;
